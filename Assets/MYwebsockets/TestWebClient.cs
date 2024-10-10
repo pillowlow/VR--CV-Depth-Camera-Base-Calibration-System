@@ -183,7 +183,7 @@ public class WebSocketClient : MonoBehaviour
         Log("Updated value text to: " + value);
     }
 
-    private void Log(string message)
+    public void Log(string message)
     {
         Debug.Log("Log: " + message);
 
