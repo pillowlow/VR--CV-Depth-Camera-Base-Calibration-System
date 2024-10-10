@@ -84,3 +84,7 @@ desktop.ini
 # JetBrains Rider
 .idea/
 *.sln.iml
+
+#for python
+venv/
+.venv/
