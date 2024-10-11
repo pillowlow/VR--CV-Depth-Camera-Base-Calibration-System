@@ -3,6 +3,9 @@ import websockets
 import json
 import logging
 import socket
+import base64
+import numpy as np
+import cv2
 
 from typing import TYPE_CHECKING, Dict, Any
 if TYPE_CHECKING:
@@ -60,6 +63,7 @@ class WebSocketServer:
 
     async def handle_message(self, client_id, data):
         command = data.get("command")
+        log_message = ""  # Initialize log_message to ensure it is always defined
 
         if command == "send_to_client":
             target_id = data.get("target_id")
@@ -100,7 +104,7 @@ class WebSocketServer:
                     "data": current_data
                 }
                 await self.clients[client_id].send(json.dumps(response))
-                #log_message = f"Sent current stream data for '{stream_name}' to {client_id}"
+                log_message = f"Sent current stream data for '{stream_name}' to {client_id}"
                 #logging.info(log_message)
                 self.app.log_message(log_message)
             else:
@@ -120,6 +124,38 @@ class WebSocketServer:
                 logging.info(log_message)
                 self.app.log_message(log_message)
 
+        
+        # Handle the streaming of frame data
+        elif command == "stream_frame":
+            stream_name = data.get("stream_name")
+            frame_type = data.get("frame_type")  # e.g., "rgb" or "depth"
+            frame_data = data.get("data")  # This should be a base64-encoded string
+
+            # Decode the frame data for verification and logging purposes (if needed)
+            frame_bytes = base64.b64decode(frame_data)
+            np_arr = np.frombuffer(frame_bytes, np.uint8)
+
+            if frame_type == "rgb":
+                # Convert the byte array back into an image (BGR format for OpenCV)
+                frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                if frame is not None:
+                    # Store the raw base64-encoded frame data in the streams dictionary
+                    self.streams[stream_name] = frame_data
+                    self.app.log_message(f"Stored {frame_type} frame for stream '{stream_name}' from client {client_id}, data size: {len(frame_data)}")
+                else:
+                    self.app.log_message(f"Failed to decode RGB frame from client {client_id}")
+
+            elif frame_type == "depth":
+                # Convert the byte array back into an image (depth data)
+                frame = np.frombuffer(frame_bytes, dtype=np.uint16).reshape((480, 640))  # Adjust shape if necessary
+                if frame is not None:
+                    # Store the raw base64-encoded frame data in the streams dictionary
+                    self.streams[stream_name] = frame_data
+                    self.app.log_message(f"Stored {frame_type} frame for stream '{stream_name}' from client {client_id}, data size: {len(frame_data)}")
+                else:
+                    self.app.log_message(f"Failed to decode depth frame from client {client_id}")
+
+                    
         elif command == "broadcast":
             broadcast_message = data.get("data")
             await self.broadcast_message(broadcast_message, exclude_client=client_id)
