@@ -78,21 +78,27 @@ class WebSocketServer:
                 logging.warning(log_message)
                 self.app.log_message(log_message)
 
-        elif command == "start_stream":
-            stream_name = data.get("stream_name")
-            self.streams[stream_name] = None  # Initialize the stream with no data
-            self.app.refresh_stream_dropdown()  # Refresh the stream dropdown in the UI
-            log_message = f"Stream '{stream_name}' started by {client_id}"
-            logging.info(log_message)
-            self.app.log_message(log_message)
-
         elif command == "stream_data":
-           
+        # Combined handling for 'start_stream' and 'stream_data'
             stream_name = data.get("stream_name")
             stream_data = data.get("data")
 
-            # Store the stream data in the streams dictionary
-            self.streams[stream_name] = stream_data            
+            # Automatically register the stream if it doesn't exist yet
+            if stream_name not in self.streams:
+                # Register the stream
+                self.streams[stream_name] = None  # Initialize with no data
+                self.app.refresh_stream_dropdown()  # Refresh the stream dropdown in the UI
+                log_message = f"Stream '{stream_name}' started by {client_id}"
+                logging.info(log_message)
+                self.app.log_message(log_message)
+
+            # Store the actual stream data
+            self.streams[stream_name] = stream_data
+
+            # Log data reception
+            log_message = f"Received data for stream '{stream_name}' from client {client_id}"
+            logging.info(log_message)
+            self.app.log_message(log_message)         
 
         elif command == "request_stream_data":
             stream_name = data.get("stream_name")
