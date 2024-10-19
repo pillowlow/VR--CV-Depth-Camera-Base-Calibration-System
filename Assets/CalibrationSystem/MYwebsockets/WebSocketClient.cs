@@ -7,12 +7,12 @@ using Newtonsoft.Json;
 
 public class WebSocketClient : MonoBehaviour
 {
-    private WebSocket websocket;
+    protected WebSocket websocket;
     public string clientId = "UnityClient1"; // The ID that the client will send to the server
     public TMP_InputField inputField;
     public TMP_InputField streamRequestInput; // Input field for stream request
     public TextMeshProUGUI logText;
-    public TextMeshProUGUI valueText; // Text to display the stream value
+    public TextMeshProUGUI streamText;
     public string serverPort = "ws://192.168.100.157:8080/"; 
 
     private string currentStream = ""; // Track the currently requested stream
@@ -22,7 +22,7 @@ public class WebSocketClient : MonoBehaviour
         logText.text = "WebSocket Client Ready.\n";
     }
 
-    public async void ConnectToWebSocket()
+    public virtual async void ConnectToWebSocket()
     {
         Log("Attempting to connect...");
 
@@ -64,7 +64,7 @@ public class WebSocketClient : MonoBehaviour
         await websocket.Connect();
     }
 
-    public async void DisconnectWebSocket()
+    public virtual async void DisconnectWebSocket()
     {
         Log("Disconnecting...");
         if (websocket != null)
@@ -74,7 +74,7 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
-    public async void SendMessage()
+    public virtual async void SendMessage()
     {
         if (websocket != null && websocket.State == WebSocketState.Open)
         {
@@ -93,7 +93,7 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
-    public async void RequestStreamData()
+    public virtual async void RequestStreamData()
     {
         if (websocket != null && websocket.State == WebSocketState.Open)
         {
@@ -113,7 +113,7 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
-    private void HandleServerMessage(string message)
+    protected virtual void HandleServerMessage(string message)
     {
         try
         {
@@ -151,7 +151,7 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
-    private void HandleStreamData(Dictionary<string, string> data)
+    protected virtual void HandleStreamData(Dictionary<string, string> data)
     {
         if (data.ContainsKey("stream_name") && data.ContainsKey("data"))
         {
@@ -160,7 +160,7 @@ public class WebSocketClient : MonoBehaviour
             {
                 if (float.TryParse(data["data"], out float streamValue))
                 {
-                    UpdateValueText(streamValue);
+                    Log(streamValue.ToString());  // Call unified method for updating UI
                 }
                 else
                 {
@@ -174,14 +174,8 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
-    private void UpdateValueText(float value)
-    {
-        if (valueText != null)
-        {
-            valueText.text = $"Stream Value: {value}";
-        }
-        Log("Updated value text to: " + value);
-    }
+    // Virtual method to handle any UI update: Value text and log text
+    
 
     public void Log(string message)
     {
@@ -205,15 +199,37 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
+    public void StreamLog(string message)
+    {
+        Debug.Log("Log: " + message);
+
+        if (streamText != null)
+        {
+            streamText.text += message + "\n";
+            string[] lines = streamText.text.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+            if (lines.Length > 6)
+            {
+                streamText.text = string.Join("\n", lines, 1, lines.Length - 1) + "\n";
+            }
+
+            streamText.ForceMeshUpdate();
+        }
+        else
+        {
+            Debug.LogError("streamText is null. Make sure it is assigned in the Inspector.");
+        }
+    }
+
     void Update()
     {
         if (websocket != null)
         {
-        #if !UNITY_WEBGL || UNITY_EDITOR
-                    websocket.DispatchMessageQueue();
-        #endif
-                }
-            }
+            #if !UNITY_WEBGL || UNITY_EDITOR
+            websocket.DispatchMessageQueue();
+            #endif
+        }
+    }
 
     private async void OnApplicationQuit()
     {
@@ -223,7 +239,8 @@ public class WebSocketClient : MonoBehaviour
         }
     }
 
-    public void TestButton (string message){
+    public virtual void TestButton (string message)
+    {
         Log("Clicked" + message);
         Debug.Log("Clicked" + message);
     }
