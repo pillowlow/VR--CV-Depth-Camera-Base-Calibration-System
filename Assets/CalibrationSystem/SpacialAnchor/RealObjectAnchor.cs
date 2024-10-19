@@ -4,6 +4,7 @@ using TMPro;
 public class RealObjectAnchor : MonoBehaviour
 {
     public Transform virtualCameraTransform;  // Virtual camera reference
+    private OffsetManager offsetManager;  // Reference to the global OffsetManager
     private Vector3 realWorldPosition;
     private Quaternion realWorldRotation;
 
@@ -16,6 +17,10 @@ public class RealObjectAnchor : MonoBehaviour
     {
         // Initialize UI components (if applicable)
         InitializeUIComponents();
+        if (offsetManager != null)
+        {
+            offsetManager.OnOffsetsChanged += AlignToVirtualSpace;  // Listen to offset changes
+        }
     }
 
     /// <summary>
@@ -43,6 +48,17 @@ public class RealObjectAnchor : MonoBehaviour
 
         // Align to the virtual space based on the virtual camera
         AlignToVirtualSpace();
+    }
+
+     public void SetOffsetManager(OffsetManager manager)
+    {
+        offsetManager = manager;
+
+        // Immediately apply the current offsets
+        AlignToVirtualSpace();
+
+        // Listen for any changes in offsets
+        offsetManager.OnOffsetsChanged += AlignToVirtualSpace;
     }
 
     public void UpdateWithCameraTransform()
@@ -74,6 +90,12 @@ public class RealObjectAnchor : MonoBehaviour
         // Update the anchor's position and rotation in Unity
         transform.position = alignedPosition;
         transform.rotation = alignedRotation;
+
+
+        if (offsetManager != null)
+        {
+            transform.position += offsetManager.GetOffsets();
+        }
 
         // Update the position and rotation text after the alignment
         UpdateText();

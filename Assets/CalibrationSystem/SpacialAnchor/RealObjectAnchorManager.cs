@@ -6,6 +6,7 @@ public class RealObjectAnchorManager : MonoBehaviour
 {
     public Transform virtualCameraAnchor;  // Virtual camera reference
     public GameObject realObjectAnchorPrefab;  // Prefab of the RealObjectAnchor
+    public OffsetManager offsetManager;  // The global OffsetManager
     public PositionDataWebSocketClient positionDataClient;  // WebSocket client for receiving marker positions
 
     private Dictionary<int, Transform> realSenseAnchors = new Dictionary<int, Transform>();  // Anchor storage
@@ -72,6 +73,7 @@ public class RealObjectAnchorManager : MonoBehaviour
         RealObjectAnchor anchorScript = anchorInstance.GetComponent<RealObjectAnchor>();
         anchorScript.virtualCameraTransform = virtualCameraAnchor;
         anchorScript.IDText.text = id.ToString();
+        anchorScript.SetOffsetManager(offsetManager);
 
         // Set the initial position and rotation from the RealSense space
         anchorScript.UpdateAnchor(realSensePosition, realSenseRotation);
