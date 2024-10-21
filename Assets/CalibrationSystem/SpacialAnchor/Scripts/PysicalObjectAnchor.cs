@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class RealObjectAnchor : MonoBehaviour
+public class PhysicalObjectAnchor : MonoBehaviour
 {
     public Transform virtualCameraTransform;  // Virtual camera reference
     private OffsetManager offsetManager;  // Reference to the global OffsetManager

@@ -2,29 +2,37 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RealObjectAnchorManager : MonoBehaviour
+public class PhysicalObjectAnchorManager : MonoBehaviour
 {
     public Transform virtualCameraAnchor;  // Virtual camera reference
-    public GameObject realObjectAnchorPrefab;  // Prefab of the RealObjectAnchor
+    public GameObject defaultPhysicalObjectPrefab;  // Default prefab if ID not found in list
+    public List<PrefabEntry> prefabEntries;  // List of prefabs to spawn based on ID (visible in the inspector)
     public OffsetManager offsetManager;  // The global OffsetManager
     public PositionDataWebSocketClient positionDataClient;  // WebSocket client for receiving marker positions
 
     private Dictionary<int, Transform> realSenseAnchors = new Dictionary<int, Transform>();  // Anchor storage
-    private List<RealObjectAnchor> realObjectAnchors = new List<RealObjectAnchor>();  // List of anchors for broadcasting
+    private List<PhysicalObjectAnchor> physicalObjectAnchors = new List<PhysicalObjectAnchor>();  // List of anchors for broadcasting
+
+    [System.Serializable]
+    public class PrefabEntry
+    {
+        public int id;
+        public GameObject prefab;  // The prefab to spawn for this ID
+    }
 
     private void Start()
     {
-        // Start updating anchors every 0.1 seconds
+        // Start updating anchors every 0.05 seconds
         StartCoroutine(UpdateAnchorsPeriodically(0.05f));
     }
 
-    // Coroutine to update the anchors periodically (e.g., every 0.1 seconds)
+    // Coroutine to update the anchors periodically
     private IEnumerator UpdateAnchorsPeriodically(float interval)
     {
         while (true)
         {
             UpdateAnchors();
-            yield return new WaitForSeconds(interval);  // Wait for 0.1 seconds between updates
+            yield return new WaitForSeconds(interval);
         }
     }
 
@@ -46,7 +54,6 @@ public class RealObjectAnchorManager : MonoBehaviour
             int markerId = marker.Key;
             Vector3 markerPosition = marker.Value;
 
-            // Log the marker position received
             Log($"Processing Marker ID: {markerId}, Position: X={markerPosition.x}, Y={markerPosition.y}, Z={markerPosition.z}");
 
             // Check if the anchor for this marker ID already exists
@@ -66,11 +73,14 @@ public class RealObjectAnchorManager : MonoBehaviour
     // Function to register a new RealSense space transform by ID
     public void RegisterTransform(int id, Vector3 realSensePosition, Quaternion realSenseRotation)
     {
-        // Create a new instance of the anchor prefab
-        GameObject anchorInstance = Instantiate(realObjectAnchorPrefab);
+        // Find the prefab that corresponds to the given ID
+        GameObject prefabToSpawn = FindPrefabById(id);
 
-        // Set up the RealObjectAnchor component
-        RealObjectAnchor anchorScript = anchorInstance.GetComponent<RealObjectAnchor>();
+        // Create a new instance of the prefab (or default if no match found)
+        GameObject anchorInstance = Instantiate(prefabToSpawn);
+
+        // Set up the PhysicalObjectAnchor component
+        PhysicalObjectAnchor anchorScript = anchorInstance.GetComponent<PhysicalObjectAnchor>();
         anchorScript.virtualCameraTransform = virtualCameraAnchor;
         anchorScript.IDText.text = id.ToString();
         anchorScript.SetOffsetManager(offsetManager);
@@ -82,12 +92,28 @@ public class RealObjectAnchorManager : MonoBehaviour
         realSenseAnchors[id] = anchorInstance.transform;
 
         // Add the anchor to the list for broadcasting camera updates
-        if (!realObjectAnchors.Contains(anchorScript))
+        if (!physicalObjectAnchors.Contains(anchorScript))
         {
-            realObjectAnchors.Add(anchorScript);
+            physicalObjectAnchors.Add(anchorScript);
         }
 
         Log($"Spawned new anchor for marker ID: {id} at position: {realSensePosition}");
+    }
+
+    // Function to find the prefab corresponding to the ID or return the default prefab
+    private GameObject FindPrefabById(int id)
+    {
+        foreach (PrefabEntry entry in prefabEntries)
+        {
+            if (entry.id == id)
+            {
+                return entry.prefab;
+            }
+        }
+
+        // If no matching prefab is found, return the default prefab
+        Log($"No matching prefab found for ID: {id}. Using default prefab.");
+        return defaultPhysicalObjectPrefab;
     }
 
     // Function to update a specific anchor's position and rotation by ID
@@ -96,7 +122,7 @@ public class RealObjectAnchorManager : MonoBehaviour
         if (realSenseAnchors.ContainsKey(id))
         {
             Transform anchorTransform = realSenseAnchors[id];
-            RealObjectAnchor anchorScript = anchorTransform.GetComponent<RealObjectAnchor>();
+            PhysicalObjectAnchor anchorScript = anchorTransform.GetComponent<PhysicalObjectAnchor>();
 
             if (anchorScript != null)
             {
@@ -106,15 +132,15 @@ public class RealObjectAnchorManager : MonoBehaviour
         }
     }
 
-    // Function to broadcast the camera's transform to all real object anchors
+    // Function to broadcast the camera's transform to all physical object anchors
     public void BroadcastCameraTransform()
     {
-        foreach (RealObjectAnchor anchor in realObjectAnchors)
+        foreach (PhysicalObjectAnchor anchor in physicalObjectAnchors)
         {
             // Update each anchor's transform based on the new camera transform
             anchor.UpdateWithCameraTransform();
         }
-        Log("Broadcasted camera transform to all real object anchors.");
+        Log("Broadcasted camera transform to all physical object anchors.");
     }
 
     // Logging method to show messages in VR (or Unity's Debug log if in the Editor)
