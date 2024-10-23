@@ -209,10 +209,20 @@ class WebSocketServer:
     async def main(self):
         logging.info("Server started, waiting for clients to connect...")
         self.app.log_message("Server started, waiting for clients to connect...")
-        self.server = await websockets.serve(self.register, "0.0.0.0", self.port)
+        
+        # Increase the buffer size by setting max_size and max_queue
+        self.server = await websockets.serve(
+            self.register, 
+            "0.0.0.0", 
+            self.port,
+            max_size=10**7,   # Maximum size of each message (10MB in this case)
+            max_queue=1000    # Maximum number of messages that can be queued
+        )
+        
         self.host = self.get_host_ip()
-        self.app.update_IP_config(self.host,self.port)
+        self.app.update_IP_config(self.host, self.port)
         logging.info(f"host :{self.host}")
+        
         try:
             while not self.should_stop:
                 await asyncio.sleep(1)
@@ -224,6 +234,7 @@ class WebSocketServer:
             await self.server.wait_closed()
             logging.info("Server has been stopped.")
             self.app.log_message("Server has been stopped.")
+
             
     def get_host_ip(self):
         """Get the local IP address of the machine."""

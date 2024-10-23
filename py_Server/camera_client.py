@@ -58,7 +58,7 @@ class CameraClient:
 
         # strat timer
         self.last_frame_time = time.time()  # Track the last frame sent time
-        self.frame_interval = 0.1  # Limit to 10 frames per second (0.1 sec interval)
+        self.frame_interval = 0.05  # Limit to 10 frames per second (0.1 sec interval)
 
     def start_connection(self):
         host = self.host_entry.get()
