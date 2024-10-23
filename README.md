@@ -50,5 +50,9 @@ To set up and run this project, you'll need the following hardware and software 
    In your terminal or command prompt, navigate to the `py_Server` directory where the Python server files are located:
    ```bash
    cd py_Server
-    and 
+   ```
+   and run 
+   ```
+   ```
+
 
