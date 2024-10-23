@@ -10,7 +10,7 @@ import cv2
 from PIL import Image, ImageTk
 import base64
 
-class WebSocketClient:
+class CameraClient:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Client Connection")

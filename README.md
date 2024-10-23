@@ -8,7 +8,7 @@ This project integrates Unity VR(Meta all in one sdk) with a RealSense camera an
 
 Below is a simple demo showcasing the core features of the system:
 
-![Demo Video](./Videos/DemoCalibrationEssense.gif)
+![Demo Video](./READMEAssets/DemoCalibrationEssense.gif)
 
 
 ## Get Started
@@ -75,13 +75,13 @@ Once the environment is set up, follow these steps to run the project:
    - Navigate to the `py_Server` directory in your terminal.
    - First, run the Python server:
      ```bash
-     python main.py
-     ```
-   - Then, start the camera streaming client:
-     ```bash
-     python camera_client.py
+     Start-Process python -ArgumentList "main.py"
+      Start-Process python -ArgumentList "aruCode_locate_client.py"
+
      ```
    - You will see two windows appear. Press the **Start** button on the server window, and it will display the IP address of the server.
+
+   ![Demo Video](./READMEAssets/PythonSetup.gif)
 
 3. **Connect the RealSense Client**:
    - In the camera client window, enter the server IP address and press the **Start** button. This will start the RealSense camera streaming with ArUco marker detection.
@@ -91,13 +91,54 @@ Once the environment is set up, follow these steps to run the project:
    - Connect your Meta Quest 3 to the PC via **Oculus Link**.
    - Once connected, in Unity, build and run the `ShowCase_Game` scene.
 
+
+   
+
 5. **Align the Virtual Camera Anchor**:
+   ![Demo Video](./READMEAssets/CameraAnchorPlace.gif)
    - In the Unity scene, you will see a blue **Camera Anchor**. Place it over the real position of the RealSense camera in the physical world to align the virtual and physical cameras.
    - Once the Camera Anchor is correctly placed, the ArUco markers will be detected, and anchors will be spawned at their corresponding positions in the virtual space.
 
 6. **Adjust Calibration with the Offset Panel**:
    - In the Unity scene, there is a panel with X, Y, and Z sliders. Use these sliders to adjust the XYZ offsets for better alignment and calibration of the system.
-
+   ![image](./READMEAssets/offsetPannel.png)
 By following these steps, you will have the system running with RealSense camera data streaming into Unity, allowing you to adjust calibration and interact with the physical and virtual world in real-time.
+
+### Project Structure
+
+This project consists of a Unity VR application built using the Meta All-In-One SDK, along with a Python environment for handling RealSense camera data and computer vision tasks. The components communicate via WebSocket using JSON-formatted instructions.
+
+#### 1. RealSense Camera Client (Python)
+- **Role**: Handles RealSense camera data, performs ArUco marker detection, and sends the resulting position data to the server.
+- **Key Tasks**:
+  - Processes real-world data from the RealSense camera.
+  - Detects ArUco markers for tracking positions in the physical world.
+  - Sends detected marker positions to the server using WebSocket.
+
+#### 2. Python Server
+- **Role**: Acts as an intermediary between the RealSense Camera Client and the Unity VR Client. It relays position and marker data from the camera client to the Unity VR client.
+- **Key Tasks**:
+  - Receives data from the RealSense Camera Client.
+  - Processes and forwards this data to the Unity VR Client.
+  - Handles multiple client connections and ensures smooth data flow.
+
+#### 3. Unity VR Client
+- **Role**: Receives position data from the Python server and uses it to update virtual objects in the VR environment, ensuring alignment between physical and virtual space.
+- **Key Tasks**:
+  - Receives position and marker data from the Python server.
+  - Updates the virtual camera and object anchors in the VR scene based on the RealSense data.
+  - Allows interaction and calibration using a Camera Anchor in VR.
+
+#### System Architecture Diagram
+
+Below is a visual representation of the system architecture:
+
+![System Architecture Diagram](./READMEAssets/Diagram.png)
+
+- The **RealSense Camera Client** processes camera data and detects ArUco markers.
+- The **Python Server** relays messages between the RealSense client and Unity VR client.
+- The **Unity VR Client** updates virtual objects based on the RealSense camera data.
+
+This structure ensures smooth communication between the physical and virtual environments.
 
 
