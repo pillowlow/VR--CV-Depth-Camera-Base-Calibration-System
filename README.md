@@ -11,7 +11,7 @@ Below are simple demos showcasing the core features of the system:
 Tarcking arucode in physical world and present in VR with realsense camera :
 ![Demo Video](./READMEAssets/DemoCalibrationEssense.gif)
 
-Placing or grab and adjusting Spacial Anchors on the position you want
+Placing or grab and adjusting Spacial Anchors on the position you want:
 ![Demo Video](./READMEAssets/SpacilAnchorDemo.gif)
 
 ## Get Started
@@ -103,10 +103,11 @@ Once the environment is set up, follow these steps to run the project:
    - Once the Camera Anchor is correctly placed, the ArUco markers will be detected, and anchors will be spawned at their corresponding positions in the virtual space.
 
 6. **Adjust Calibration with the Offset Panel**:
+   ![image](./READMEAssets/offsetPannel.png)
    - In the Unity scene, there is a panel with X, Y, and Z sliders. Use these sliders to adjust the XYZ offsets for better alignment and calibration of the system.
   
 By following these steps, you will have the system running with RealSense camera data streaming into Unity, allowing you to adjust calibration and interact with the physical and virtual world in real-time.
- ![image](./READMEAssets/offsetPannel.png)
+ 
 
 ### Project Structure
 

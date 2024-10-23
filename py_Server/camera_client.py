@@ -9,6 +9,7 @@ import numpy as np
 import cv2
 from PIL import Image, ImageTk
 import base64
+import time  
 
 class CameraClient:
     def __init__(self):
@@ -54,6 +55,10 @@ class CameraClient:
         self.pipeline.start(self.config)
         self.running = True
         threading.Thread(target=self.update_frames, daemon=True).start()
+
+        # strat timer
+        self.last_frame_time = time.time()  # Track the last frame sent time
+        self.frame_interval = 0.1  # Limit to 10 frames per second (0.1 sec interval)
 
     def start_connection(self):
         host = self.host_entry.get()
@@ -140,16 +145,21 @@ class CameraClient:
             self.depth_image = ImageTk.PhotoImage(Image.fromarray(depth_display))
             self.depth_label.configure(image=self.depth_image)
 
-            # Send RGB and depth frames to the server
-            if self.websocket and self.websocket.open:
-                asyncio.run_coroutine_threadsafe(
-                    self.send_frame(self.websocket, color_image, "rgb", "stream_rgb"),
-                    self.loop
-                )
-                asyncio.run_coroutine_threadsafe(
-                    self.send_frame(self.websocket, depth_image, "depth", "stream_depth"),
-                    self.loop
-                )
+            # Throttle frame sending to 10 FPS (0.1 sec interval)
+            current_time = time.time()
+            if current_time - self.last_frame_time >= self.frame_interval:
+                self.last_frame_time = current_time  # Update the last frame time
+
+                # Send RGB and depth frames to the server
+                if self.websocket and self.websocket.open:
+                    asyncio.run_coroutine_threadsafe(
+                        self.send_frame(self.websocket, color_image, "rgb", "stream_rgb"),
+                        self.loop
+                    )
+                    asyncio.run_coroutine_threadsafe(
+                        self.send_frame(self.websocket, depth_image, "depth", "stream_depth"),
+                        self.loop
+                    )
 
     def on_close(self):
         self.running = False
