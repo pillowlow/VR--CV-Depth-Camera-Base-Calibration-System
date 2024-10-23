@@ -8,7 +8,7 @@ This project integrates Unity VR(Meta all in one sdk) with a RealSense camera an
 
 Below is a simple demo showcasing the core features of the system:
 
-![Demo Video](./Videos/DemoCalibrationEssense.mp4)
+![Demo Video](./Videos/DemoCalibrationEssense.gif)
 
 
 ## Get Started
@@ -53,6 +53,13 @@ To set up and run this project, you'll need the following hardware and software 
    ```
    and run 
    ```
+   .\venv\Scripts\activate
+
    ```
+   to start virtaul environemnt 
+   and finally  run
 
-
+    ```
+    pip install -r requirements.txt
+   ``` 
+    to setup your python environment
