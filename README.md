@@ -1,4 +1,4 @@
-# Project Name: Unity-VR with RealSense and Python Server-Client System
+# VR- CV-Depth Camera Base Calibration System
 
 ## Abstract
 
@@ -43,7 +43,7 @@ To set up and run this project, you'll need the following hardware and software 
 4. **Install Meta Quest Developer Hub** (Optional but recommended):
    - Download the **Meta Quest Developer Hub** from the Meta Developers website to help with managing and debugging the app on the Meta Quest 3.
 
-5. **Python Virtual Environment Setup:
+5. **Python Virtual Environment Setup:**
 
    - To ensure that the Python environment is correctly isolated, follow these steps to set up and activate a virtual environment in the `py_Server` directory.
    - Navigate to the `py_Server` Directory:
@@ -63,3 +63,41 @@ To set up and run this project, you'll need the following hardware and software 
     pip install -r requirements.txt
    ``` 
     to setup your python environment
+
+### Get Started
+
+Once the environment is set up, follow these steps to run the project:
+
+1. **Plug in the RealSense Camera**:
+   - Ensure that your RealSense camera is connected to your Windows machine and the necessary drivers are installed.
+
+2. **Start the Python Server and Client**:
+   - Navigate to the `py_Server` directory in your terminal.
+   - First, run the Python server:
+     ```bash
+     python main.py
+     ```
+   - Then, start the camera streaming client:
+     ```bash
+     python camera_client.py
+     ```
+   - You will see two windows appear. Press the **Start** button on the server window, and it will display the IP address of the server.
+
+3. **Connect the RealSense Client**:
+   - In the camera client window, enter the server IP address and press the **Start** button. This will start the RealSense camera streaming with ArUco marker detection.
+
+4. **Open Unity and Set Up Meta Quest 3**:
+   - Launch **Unity** and open the project.
+   - Connect your Meta Quest 3 to the PC via **Oculus Link**.
+   - Once connected, in Unity, build and run the `ShowCase_Game` scene.
+
+5. **Align the Virtual Camera Anchor**:
+   - In the Unity scene, you will see a blue **Camera Anchor**. Place it over the real position of the RealSense camera in the physical world to align the virtual and physical cameras.
+   - Once the Camera Anchor is correctly placed, the ArUco markers will be detected, and anchors will be spawned at their corresponding positions in the virtual space.
+
+6. **Adjust Calibration with the Offset Panel**:
+   - In the Unity scene, there is a panel with X, Y, and Z sliders. Use these sliders to adjust the XYZ offsets for better alignment and calibration of the system.
+
+By following these steps, you will have the system running with RealSense camera data streaming into Unity, allowing you to adjust calibration and interact with the physical and virtual world in real-time.
+
+
