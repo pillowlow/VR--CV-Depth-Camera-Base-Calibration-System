@@ -8,5 +8,42 @@ This project integrates Unity VR(Meta all in one sdk) with a RealSense camera an
 
 Below is a simple demo showcasing the core features of the system:
 
-![Demo Video](./Video/DemoCalibrationEssense.mp4)
+![Demo Video](./Videos/DemoCalibrationEssense.mp4)
 
+
+## Get Started
+
+To set up and run this project, you'll need the following hardware and software components.
+
+### Hardware Requirements
+- **Meta Quest 3**: VR headset for interaction.
+- **Intel RealSense Camera**: For capturing depth and RGB data.
+- **Windows Machine**: A Windows PC with a recommended GPU, **NVIDIA RTX 2060 or higher**.
+
+### Software Requirements
+- **Unity Engine**: Version **2022.3.9f1** or later.
+- **Meta Quest Link**: To connect your Meta Quest headset to the PC.
+- **Meta Quest Developer Hub** (recommended): For managing and deploying the VR app.
+- **Python 3.11** (recommended): To run the server-side components of the system.
+
+### Installation Instructions
+
+1. **Set up Meta Quest Link**:
+   - Download and install the **Meta Quest Link** software from the official Oculus/Meta website.
+   - Ensure your Meta Quest 3 is connected to your PC via a USB-C cable or over Wi-Fi using Air Link.
+
+2. **Install Unity Engine**:
+   - Download and install **Unity Hub** from [Unity's website](https://unity.com/download).
+   - Install **Unity 2022.3.9f1** or later through Unity Hub.
+
+3. **Set up Python**:
+   - Download and install **Python 3.11** from [Python's website](https://www.python.org/downloads/).
+   - Make sure to check the box for "Add Python to PATH" during installation.
+
+4. **Install Meta Quest Developer Hub** (Optional but recommended):
+   - Download the **Meta Quest Developer Hub** from the Meta Developers website to help with managing and debugging the app on the Meta Quest 3.
+
+5. **Install Required Python Packages**:
+   - After installing Python, install the necessary Python packages by running the following command in your terminal:
+   ```bash
+   pip install websockets pyrealsense2 numpy opencv-python pillow
