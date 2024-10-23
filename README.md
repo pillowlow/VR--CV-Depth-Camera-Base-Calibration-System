@@ -37,13 +37,18 @@ To set up and run this project, you'll need the following hardware and software 
    - Install **Unity 2022.3.9f1** or later through Unity Hub.
 
 3. **Set up Python**:
-   - Download and install **Python 3.11** from [Python's website](https://www.python.org/downloads/).
+   - Download and install **Python 3.10** from [Python's website](https://www.python.org/downloads/).
    - Make sure to check the box for "Add Python to PATH" during installation.
 
 4. **Install Meta Quest Developer Hub** (Optional but recommended):
    - Download the **Meta Quest Developer Hub** from the Meta Developers website to help with managing and debugging the app on the Meta Quest 3.
 
-5. **Install Required Python Packages**:
-   - After installing Python, install the necessary Python packages by running the following command in your terminal:
+5. **Python Virtual Environment Setup:
+
+   - To ensure that the Python environment is correctly isolated, follow these steps to set up and activate a virtual environment in the `py_Server` directory.
+   - Navigate to the `py_Server` Directory:
+   In your terminal or command prompt, navigate to the `py_Server` directory where the Python server files are located:
    ```bash
-   pip install websockets pyrealsense2 numpy opencv-python pillow
+   cd py_Server
+    and 
+
