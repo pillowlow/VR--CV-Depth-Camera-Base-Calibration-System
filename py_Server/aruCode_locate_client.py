@@ -9,9 +9,9 @@ import threading
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
 from PIL import Image, ImageTk
-from simpleClient import WebSocketClient
+from websocket_client import WebsocketClient
 
-class LocationSendingWebSocketClient(WebSocketClient):
+class LocationSendingWebSocketClient(WebsocketClient):
     def __init__(self):
         super().__init__()
 

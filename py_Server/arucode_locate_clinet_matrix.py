@@ -9,9 +9,9 @@ from cv2 import aruco
 from tkinter import Tk, scrolledtext
 import tkinter as tk
 from PIL import Image, ImageTk
-from simpleClient import WebSocketClient
+from websocket_client import WebsocketClient
 
-class LocationSendingWebSocketClient_Matrix(WebSocketClient):
+class LocationSendingWebSocketClient_Matrix(WebsocketClient):
     def __init__(self):
         super().__init__()
         self.marker_data = {}  # Dictionary to store each marker's latest position

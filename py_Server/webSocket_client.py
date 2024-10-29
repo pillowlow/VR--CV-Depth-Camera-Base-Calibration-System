@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import messagebox
 import threading
 
-class WebSocketClient:
+class WebsocketClient:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Client Connection")
