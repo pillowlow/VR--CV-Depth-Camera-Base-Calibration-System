@@ -28,7 +28,7 @@ class LocationSendingWebSocketClient(WebSocketClient):
 
         # ArUco Dictionary and Parameters
         self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
-        self.aruco_params = aruco.DetectorParameters_create()
+        self.aruco_params = aruco.DetectorParameters()
 
         # GUI element to display frames
         self.frame_label = tk.Label(self.window)
@@ -91,13 +91,17 @@ class LocationSendingWebSocketClient(WebSocketClient):
                         x, y, z = rs.rs2_deproject_pixel_to_point(depth_intrinsics, [cx, cy], depth)
                         y = -y  # Flip y-axis to match the camera's coordinate system
 
-                        # Add the marker data to the list
+                        # Add the marker data to the list with limited precision
                         marker_data.append({
                             "marker_id": int(ids[i][0]),
-                            "position": {"x": float(x), "y": float(y), "z": float(z)}
+                            "position": {
+                                "x": round(x, 2),
+                                "y": round(y, 2),
+                                "z": round(z, 2)
+                            }
                         })
 
-                        # Create log entry for detected markers
+                        # Create log entry for detected markers with limited precision
                         log_message += f"Marker ID: {ids[i][0]} - Position: X={x:.2f}, Y={y:.2f}, Z={z:.2f}\n"
 
                         # Draw the marker ID and center on the frame

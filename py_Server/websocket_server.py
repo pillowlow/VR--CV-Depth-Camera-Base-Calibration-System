@@ -216,7 +216,7 @@ class WebSocketServer:
             "0.0.0.0", 
             self.port,
             max_size=10**7,   # Maximum size of each message (10MB in this case)
-            max_queue=1000    # Maximum number of messages that can be queued
+            max_queue=10000    # Maximum number of messages that can be queued
         )
         
         self.host = self.get_host_ip()
