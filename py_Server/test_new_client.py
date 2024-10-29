@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import messagebox
 import threading
 
-class WebsocketClient:
+class WebsocketClient_test:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Client Connection")
@@ -27,7 +27,7 @@ class WebsocketClient:
 
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)
         self.websocket = None
-        self.loop = asyncio.get_event_loop()
+        self.loop = asyncio.new_event_loop()  # Create a dedicated event loop
 
     def start_connection(self):
         host = self.host_entry.get()
@@ -38,8 +38,24 @@ class WebsocketClient:
             messagebox.showerror("Input Error", "Please provide host, port, and client ID.")
             return
 
-        # Start the connection in a new thread to avoid blocking the GUI
-        threading.Thread(target=self.loop.run_until_complete, args=(self.run_client(host, port, client_id),), daemon=True).start()
+        print("Starting WebSocket connection...")
+        threading.Thread(target=self.run_client, args=(host, port, client_id), daemon=True).start()
+
+    def run_client(self, host, port, client_id):
+        asyncio.set_event_loop(self.loop)  # Set the dedicated loop for the thread
+        self.loop.run_until_complete(self.connect_to_server(host, port, client_id))
+
+    async def connect_to_server(self, host, port, client_id):
+        uri = f"ws://{host}:{port}"
+        try:
+            async with websockets.connect(uri) as websocket:
+                self.websocket = websocket
+                print(f"Connected to server at {uri}")
+                await self.send_id(websocket, client_id)
+                await self.listen_to_server(websocket)
+        except Exception as e:
+            messagebox.showerror("Connection Error", f"Could not connect to server: {e}")
+            print(f"Could not connect to server: {e}")
 
     async def send_id(self, websocket, client_id):
         await websocket.send(json.dumps({"client_id": client_id}))
@@ -57,26 +73,16 @@ class WebsocketClient:
         except Exception as e:
             print(f"Error while listening to server: {e}")
 
-    async def run_client(self, host, port, client_id):
-        uri = f"ws://{host}:{port}"
-        try:
-            async with websockets.connect(uri) as websocket:
-                self.websocket = websocket
-                print(f"Connected to server at {uri}")
-                await self.listen_to_server(websocket)
-        except Exception as e:
-            messagebox.showerror("Connection Error", f"Could not connect to server: {e}")
-            print(f"Could not connect to server: {e}")
-
     def on_close(self):
         if self.websocket and not self.websocket.closed:
             self.loop.run_until_complete(self.websocket.close())
+        self.loop.stop()
         self.window.destroy()
 
     def run(self):
+        print("Running Tkinter mainloop")
         self.window.mainloop()
 
-
 if __name__ == "__main__":
-    client = WebsocketClient()
+    client = WebsocketClient_test()
     client.run()
