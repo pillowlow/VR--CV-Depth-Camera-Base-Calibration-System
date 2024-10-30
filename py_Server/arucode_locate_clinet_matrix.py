@@ -9,10 +9,10 @@ from cv2 import aruco
 from tkinter import Tk, scrolledtext
 import tkinter as tk  # Import tkinter with alias for widgets
 from PIL import Image, ImageTk
-from test_new_client import WebsocketClient_test
+from webSocket_client import WebsocketClient
 import logging
 
-class LocationSendingWebSocketClient_Matrix(WebsocketClient_test):
+class LocationSendingWebSocketClient_Matrix(WebsocketClient):
     def __init__(self):
         super().__init__()  # Initialize WebSocketClient_test
         self.marker_data = {}  # Dictionary to store marker position data
