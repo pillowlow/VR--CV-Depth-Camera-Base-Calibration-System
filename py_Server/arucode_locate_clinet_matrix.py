@@ -138,8 +138,8 @@ class LocationSendingWebSocketClient_Matrix(WebsocketClient_test):
     def update_log(self, message):
         """Update log area in the GUI."""
         self.log_area.config(state='normal')
-        self.log_area.delete(1.0, Tk.END)
-        self.log_area.insert(Tk.END, message)
+        self.log_area.delete(1.0, tk.END)
+        self.log_area.insert(tk.END, message)
         self.log_area.config(state='disabled')
 
     def update_frame_in_gui(self, frame):
