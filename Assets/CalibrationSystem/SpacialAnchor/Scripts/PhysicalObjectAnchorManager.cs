@@ -12,6 +12,8 @@ public class PhysicalObjectAnchorManager : MonoBehaviour
 
     private Dictionary<int, Transform> realSenseAnchors = new Dictionary<int, Transform>();  // Anchor storage
     private List<PhysicalObjectAnchor> physicalObjectAnchors = new List<PhysicalObjectAnchor>();  // List of anchors for broadcasting
+    [SerializeField]
+    private float update_interval = 0.05f;
 
     [System.Serializable]
     public class PrefabEntry
@@ -23,7 +25,7 @@ public class PhysicalObjectAnchorManager : MonoBehaviour
     private void Start()
     {
         // Start updating anchors every 0.05 seconds
-        StartCoroutine(UpdateAnchorsPeriodically(0.05f));
+        StartCoroutine(UpdateAnchorsPeriodically(update_interval));
     }
 
     // Coroutine to update the anchors periodically
@@ -54,7 +56,7 @@ public class PhysicalObjectAnchorManager : MonoBehaviour
             int markerId = marker.Key;
             Vector3 markerPosition = marker.Value;
 
-            Log($"Processing Marker ID: {markerId}, Position: X={markerPosition.x}, Y={markerPosition.y}, Z={markerPosition.z}");
+            Log($"Update Anchor Marker ID: {markerId}, Position: X={markerPosition.x}, Y={markerPosition.y}, Z={markerPosition.z}");
 
             // Check if the anchor for this marker ID already exists
             if (realSenseAnchors.ContainsKey(markerId))

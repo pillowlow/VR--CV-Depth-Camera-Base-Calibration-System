@@ -73,34 +73,31 @@ public class PhysicalObjectAnchor : MonoBehaviour
     /// </summary>
     private void AlignToVirtualSpace()
     {
-        // No need for any complex 180-degree rotations on Y-axis initially
-        // Invert Z to match RealSense's "away from the camera" direction to Unity's forward direction
-        Vector3 adjustedRealWorldPosition = realWorldPosition;
-        adjustedRealWorldPosition.z = -adjustedRealWorldPosition.z; // Invert Z-axis
+        // Calculate position relative to the virtual camera
+        // Convert the real-world position to virtual space by directly adding it relative to the virtual camera
+        realWorldPosition.y = -realWorldPosition.y;
+        Vector3 relativePosition = virtualCameraTransform.position - virtualCameraTransform.TransformDirection(realWorldPosition);
 
-        // Convert the real-world position to virtual camera space
-        Vector3 alignedPosition = virtualCameraTransform.TransformPoint(adjustedRealWorldPosition);
+        // Set the anchor’s position in Unity's virtual world
+        transform.position = relativePosition;
 
-        // Apply the final flip on the X-axis to fix the inversion issue
-        alignedPosition.x = -alignedPosition.x;  // Flip X-axis
-
-        // Keep the rotation consistent
+        // Apply rotation directly relative to the virtual camera's orientation
         Quaternion alignedRotation = virtualCameraTransform.rotation * realWorldRotation;
 
-        // Update the anchor's position and rotation in Unity
-        transform.position = alignedPosition;
+        // Update the rotation of the anchor
         transform.rotation = alignedRotation;
 
-
+        // Apply any additional offsets from offsetManager if available
         if (offsetManager != null)
         {
             transform.position += offsetManager.GetOffsets();
         }
 
-        // Update the position and rotation text after the alignment
+        // Update UI or logs if needed
         UpdateText();
-        Debug.Log("Aligned anchor with final X-axis flip");
+        Debug.Log("Aligned anchor with simplified position calculation.");
     }
+
 
 
 

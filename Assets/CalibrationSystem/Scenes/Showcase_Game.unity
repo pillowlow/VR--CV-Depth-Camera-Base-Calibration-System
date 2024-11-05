@@ -5624,6 +5624,11 @@ PrefabInstance:
       objectReference: {fileID: 726709866}
     - target: {fileID: 7383009499285874342, guid: b41e70e60b468894a87bfa3a2620fec3,
         type: 3}
+      propertyPath: update_interval
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7383009499285874342, guid: b41e70e60b468894a87bfa3a2620fec3,
+        type: 3}
       propertyPath: positionDataClient
       value: 
       objectReference: {fileID: 1925884938}
@@ -5641,7 +5646,7 @@ PrefabInstance:
         type: 3}
       propertyPath: defaultPhysicalObjectPrefab
       value: 
-      objectReference: {fileID: 4727947597564054104, guid: 5405144014a542b4cad27aab3452873c,
+      objectReference: {fileID: 6099103024586383314, guid: 8f0fad60d437f294b98bc41de43a071b,
         type: 3}
     - target: {fileID: 7383009499285874342, guid: b41e70e60b468894a87bfa3a2620fec3,
         type: 3}
@@ -25251,7 +25256,22 @@ PrefabInstance:
     - target: {fileID: 8421308455769937789, guid: 724d38b94a52dc94fbfe8ef95bd5bbc2,
         type: 3}
       propertyPath: serverPort
-      value: ws://192.168.1.124:8080/
+      value: ws://192.168.50.75:8080/
+      objectReference: {fileID: 0}
+    - target: {fileID: 8421308455769937789, guid: 724d38b94a52dc94fbfe8ef95bd5bbc2,
+        type: 3}
+      propertyPath: requestInterval
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 8421308455769937789, guid: 724d38b94a52dc94fbfe8ef95bd5bbc2,
+        type: 3}
+      propertyPath: allowedMarkerIds.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8421308455769937789, guid: 724d38b94a52dc94fbfe8ef95bd5bbc2,
+        type: 3}
+      propertyPath: allowedMarkerIds.Array.data[5]
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 8448758898358745045, guid: 724d38b94a52dc94fbfe8ef95bd5bbc2,
         type: 3}

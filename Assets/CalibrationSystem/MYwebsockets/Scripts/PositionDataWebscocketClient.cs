@@ -1,114 +1,98 @@
 using UnityEngine;
-using TMPro;
-using Meta.Net.NativeWebSocket;
-using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Meta.Net.NativeWebSocket;
 using System.Threading.Tasks;
-using System;
-
 
 public class PositionDataWebSocketClient : WebSocketClient
 {
     [SerializeField]
-    private string streamName = "aruco_position_stream";  // Serialized stream name to be set in Unity Inspector
-
+    private string streamName = "aruco_position_stream";
     [SerializeField]
-    private float requestInterval = 0.1f;  // Interval for stream data requests (in seconds)
+    private float requestInterval = 0.05f;
 
-    // Dictionary to store marker positions (ID and last known position)
     private Dictionary<int, Vector3> lastKnownPositions = new Dictionary<int, Vector3>();
+    private int counter = 0;
 
-    public class Position
-    {
-        public float x { get; set; }
-        public float y { get; set; }
-        public float z { get; set; }
-    }
-
-    public class MarkerData
-    {
-        public int marker_id { get; set; }
-        public Position position { get; set; }
-    }
-
-    public class StreamDataMessage
-    {
-        public string command { get; set; }
-        public string stream_name { get; set; }
-        public List<MarkerData> data { get; set; }
-    }
-
-
+    // Define an array for allowed marker IDs
+    [SerializeField]
+    private int[] allowedMarkerIds = { 1, 2, 3, 4, 5 }; // Example IDs, adjust these based on your requirement
 
     void Start()
     {
-        // Connect to WebSocket on start
         ConnectToWebSocket();
     }
 
-    // Override the connection to automatically start requesting stream data after connection
     public override async void ConnectToWebSocket()
     {
-        base.ConnectToWebSocket();  // Connect to the server
-
-        // Start requesting stream data every 0.1 seconds once connected
-        StartRequestingStreamData();
+        base.ConnectToWebSocket();
+        StartCoroutine(RequestStreamDataCoroutine());
     }
 
-    // Automatically request stream data every 0.1 seconds
-    private async void StartRequestingStreamData()
+    private IEnumerator RequestStreamDataCoroutine()
     {
         while (true)
         {
             if (websocket != null && websocket.State == WebSocketState.Open)
             {
-                // Send the request for stream data
                 var message = new Dictionary<string, string>
                 {
                     { "command", "request_stream_data" },
                     { "client_id", clientId },
                     { "stream_name", streamName }
                 };
-                await websocket.SendText(JsonConvert.SerializeObject(message));
-                //Log($"Requested stream data for '{streamName}'");
+                yield return SendWebSocketMessage(JsonConvert.SerializeObject(message));
             }
-            
-            // Wait for the next request
-            await Task.Delay((int)(requestInterval * 1000));  // 0.1 second interval
+            yield return new WaitForSeconds(requestInterval);
+            Log("Requested stream data.");
         }
     }
 
-    // Handle incoming messages (override to handle position data)
-   // Handle incoming messages (override to handle position data)
+    private IEnumerator SendWebSocketMessage(string message)
+    {
+        Task sendTask = websocket.SendText(message);
+        while (!sendTask.IsCompleted) yield return null;
+
+        if (sendTask.IsFaulted)
+        {
+            Log("Failed to send message over WebSocket: " + sendTask.Exception);
+        }
+    }
+
     protected override void HandleServerMessage(string message)
     {
         try
         {
-            // Deserialize the incoming message as a StreamDataMessage object
+            Debug.Log("Received message from server: " + message);
+
             var streamDataMessage = JsonConvert.DeserializeObject<StreamDataMessage>(message);
 
-            if (streamDataMessage != null && streamDataMessage.command == "stream_data")
+            if (streamDataMessage != null && streamDataMessage.command == "stream_data" && streamDataMessage.data != null)
             {
-                if (streamDataMessage.data != null)
+                foreach (var marker in streamDataMessage.data)
                 {
-                    foreach (var marker in streamDataMessage.data)
+                    int markerId = marker.marker_id;
+
+                    // Check if the marker ID is in the allowed list
+                    if (System.Array.Exists(allowedMarkerIds, id => id == markerId))
                     {
-                        // Extract marker ID and position
-                        int markerId = marker.marker_id;
-                        Vector3 markerPosition = new Vector3(marker.position.x, marker.position.y, marker.position.z);
+                        Vector3 markerPosition = new Vector3(marker.x, marker.y, marker.z);
 
-                        // Log the marker data
-                        StreamLog($"Marker ID: {markerId} - Position: X={marker.position.x}, Y={marker.position.y}, Z={marker.position.z}");
+                        // Log each marker's data
+                        Debug.Log($"Allowed Marker ID: {markerId} - Position: X={markerPosition.x}, Y={markerPosition.y}, Z={markerPosition.z} - Counter: {counter}");
+                        StreamLog($"Allowed Marker ID: {markerId} - Position: X={markerPosition.x}, Y={markerPosition.y}, Z={markerPosition.z} - Counter: {counter}");
 
-                        // ** Update the lastKnownPositions dictionary with the new data **
+                        // Update the dictionary with the new position data
                         lastKnownPositions[markerId] = markerPosition;
+                        counter++;
                     }
+                   
                 }
             }
             else
             {
-                Log("Failed to handle stream data. Command mismatch or missing data.");
+                Log("Failed to handle stream data: Command mismatch or missing data.");
             }
         }
         catch (JsonException ex)
@@ -118,37 +102,38 @@ public class PositionDataWebSocketClient : WebSocketClient
         }
     }
 
-
-   public Dictionary<int, Vector3> GetMarkerPositions()
-    {   
-        //Log("GetMarkerPositions called");
-        // Log the content of the lastKnownPositions dictionary
-        if (lastKnownPositions.Count > 0)
-        {
-            foreach (var marker in lastKnownPositions)
-            {
-                Log($"Marker ID: {marker.Key}, Position: X={marker.Value.x}, Y={marker.Value.y}, Z={marker.Value.z}");
-            }
-        }
-        else
-        {
-            Log("No markers currently sent.");
-        }
-
-        // Return a copy of the dictionary
+    public Dictionary<int, Vector3> GetMarkerPositions()
+    {
+        Debug.Log("GetMarkerPositions called with data: " + lastKnownPositions);
         return new Dictionary<int, Vector3>(lastKnownPositions);
     }
 
-    // Removed UI elements for requesting stream data (stream input and button) as they are not needed now
-    public void UpdateUI()
+    private void StreamLog(string message)
     {
-        GUILayout.Label("WebSocket Client - Streaming ArUco Position Data");
-
-        // Display the current marker positions in the log
-        GUILayout.Label("Last Known Marker Positions:");
-        foreach (var entry in lastKnownPositions)
+        if (streamText != null)
         {
-            GUILayout.Label($"Marker ID: {entry.Key} - Position: {entry.Value}");
+            streamText.text += message + "\n";
+            if (streamText.text.Split('\n').Length > 6)
+            {
+                streamText.text = string.Join("\n", streamText.text.Split('\n')[1..]);
+            }
+            streamText.ForceMeshUpdate();
         }
     }
 }
+
+public class StreamDataMessage
+{
+    public string command { get; set; }
+    public string stream_name { get; set; }
+    public List<MarkerData> data { get; set; }
+}
+
+public class MarkerData
+{
+    public int marker_id { get; set; }
+    public float x { get; set; }
+    public float y { get; set; }
+    public float z { get; set; }
+}
+
