@@ -1,50 +1,96 @@
-using System.Collections;
 using UnityEngine;
+using TMPro;
 
-public class VRGunOVR : MonoBehaviour
+public class VRGun : MonoBehaviour
 {
-    public GameObject bulletPrefab;       // Bullet prefab to spawn
-    public Transform bulletSpawnPoint;    // Where bullets are spawned from the gun
-    public float bulletSpeed = 20f;       // Speed at which bullets are fired
-    public float fireRate = 0.5f;         // Fire rate to control how often bullets are fired
-    public OVRInput.Controller controller; // The VR controller to use (e.g., OVRInput.Controller.RTouch)
+    public Transform bulletSpawnPoint;
+    public GameObject bulletPrefab;
+    public float bulletSpeed = 20f;
+    public AudioClip shootSound;
+    public ParticleSystem muzzleFlash;
+    public int maxBullets = 10;  // Max bullets in the gun
+    public int currentBullets;   // Current bullets left in the gun
+    public TextMeshProUGUI bulletCountText;  // Text component to display bullet count
 
-    private OVRGrabbable grabbable;       // To detect when the gun is grabbed
-    private bool canShoot = true;         // To control firing rate
+    private AudioSource audioSource;
+    private bool isGrabbed = false;
 
-    void Start()
+    private void Start()
     {
-        // Get the OVRGrabbable component attached to this gun
-        grabbable = GetComponent<OVRGrabbable>();
+        audioSource = GetComponent<AudioSource>();
+        currentBullets = maxBullets;  // Start with a full magazine
+        UpdateBulletCountText();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        // Only allow shooting when the gun is grabbed
-        if (grabbable.isGrabbed)
+        if (isGrabbed && Input.GetButtonDown("Fire1"))
         {
-            // Detect when the index trigger is pressed on the specified controller
-            if (OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller) && canShoot)
-            {
-                StartCoroutine(ShootBullet());
-            }
+            Shoot();
         }
     }
 
-    // Coroutine to handle firing rate and bullet instantiation
-    private IEnumerator ShootBullet()
+    public void GrabGun()
     {
-        canShoot = false;
+        isGrabbed = true;
+    }
 
-        // Instantiate the bullet at the spawn point and apply force
-        GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-        Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
-        bulletRb.velocity = bulletSpawnPoint.forward * bulletSpeed;
+    public void ReleaseGun()
+    {
+        isGrabbed = false;
+    }
 
-        // Wait for the fire rate cooldown
-        yield return new WaitForSeconds(fireRate);
+    private void Shoot()
+    {
+        if (currentBullets > 0)  // Only shoot if there are bullets left
+        {
+            // Instantiate the bullet
+            GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+            bullet.GetComponent<Rigidbody>().velocity = bulletSpawnPoint.forward * bulletSpeed;
+            bullet.tag = "Bullet";
 
-        canShoot = true;
+            currentBullets--;  // Decrease the bullet count
+            UpdateBulletCountText();  // Update the UI with the new bullet count
+            OnShoot();         // Trigger shoot effects
+        }
+        else
+        {
+            Debug.Log("Out of bullets! Find a refill point.");
+        }
+    }
+
+    private void OnShoot()
+    {
+        if (muzzleFlash != null)
+        {
+            muzzleFlash.Play();
+        }
+        if (audioSource != null && shootSound != null)
+        {
+            audioSource.PlayOneShot(shootSound);
+        }
+    }
+
+    public void RefillBullets()
+    {
+        currentBullets = maxBullets;  // Refill bullets to the max capacity
+        UpdateBulletCountText();      // Update the UI with the full bullet count
+        Debug.Log("Bullets refilled!");
+    }
+
+    private void UpdateBulletCountText()
+    {
+        if (bulletCountText != null)
+        {
+            bulletCountText.text = $"Bullets: {currentBullets}/{maxBullets}";
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("RefillPoint"))  // Check if entering a refill zone
+        {
+            RefillBullets();
+        }
     }
 }

@@ -8,32 +8,16 @@ public class PhysicalObjectAnchor : MonoBehaviour
     private Vector3 realWorldPosition;
     private Quaternion realWorldRotation;
 
-    // UI components to display position and rotation
+    // Optional UI components to display position and rotation
     public TextMeshProUGUI IDText;
     public TextMeshProUGUI positionText;
     public TextMeshProUGUI rotationText;
 
     private void Awake()
     {
-        // Initialize UI components (if applicable)
-        InitializeUIComponents();
         if (offsetManager != null)
         {
             offsetManager.OnOffsetsChanged += AlignToVirtualSpace;  // Listen to offset changes
-        }
-    }
-
-    /// <summary>
-    /// Initializes the UI components for displaying position and rotation.
-    /// </summary>
-    private void InitializeUIComponents()
-    {
-        // Assuming UI components are set up in the child objects
-        if (IDText == null || positionText == null || rotationText == null)
-        {
-            IDText = transform.Find("Canvas/IDText").GetComponent<TextMeshProUGUI>();
-            positionText = transform.Find("Canvas/PositionText").GetComponent<TextMeshProUGUI>();
-            rotationText = transform.Find("Canvas/RotationText").GetComponent<TextMeshProUGUI>();
         }
     }
 
@@ -50,7 +34,7 @@ public class PhysicalObjectAnchor : MonoBehaviour
         AlignToVirtualSpace();
     }
 
-     public void SetOffsetManager(OffsetManager manager)
+    public void SetOffsetManager(OffsetManager manager)
     {
         offsetManager = manager;
 
@@ -67,14 +51,12 @@ public class PhysicalObjectAnchor : MonoBehaviour
         AlignToVirtualSpace();
     }
 
-
     /// <summary>
     /// Align the real-world position and rotation to the virtual camera space.
     /// </summary>
     private void AlignToVirtualSpace()
     {
         // Calculate position relative to the virtual camera
-        // Convert the real-world position to virtual space by directly adding it relative to the virtual camera
         realWorldPosition.y = -realWorldPosition.y;
         Vector3 relativePosition = virtualCameraTransform.position - virtualCameraTransform.TransformDirection(realWorldPosition);
 
@@ -93,21 +75,16 @@ public class PhysicalObjectAnchor : MonoBehaviour
             transform.position += offsetManager.GetOffsets();
         }
 
-        // Update UI or logs if needed
+        // Optionally update UI text if they are assigned
         UpdateText();
-        Debug.Log("Aligned anchor with simplified position calculation.");
     }
 
-
-
-
-
-
     /// <summary>
-    /// Updates the position and rotation display in the UI.
+    /// Updates the position and rotation display in the UI, if available.
     /// </summary>
     private void UpdateText()
     {
+        // Update text only if the respective fields are assigned
         if (positionText != null)
         {
             positionText.text = $"Position: {transform.position.ToString("F3")}";

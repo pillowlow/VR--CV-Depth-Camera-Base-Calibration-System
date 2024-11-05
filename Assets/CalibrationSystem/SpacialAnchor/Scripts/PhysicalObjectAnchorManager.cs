@@ -84,7 +84,10 @@ public class PhysicalObjectAnchorManager : MonoBehaviour
         // Set up the PhysicalObjectAnchor component
         PhysicalObjectAnchor anchorScript = anchorInstance.GetComponent<PhysicalObjectAnchor>();
         anchorScript.virtualCameraTransform = virtualCameraAnchor;
-        anchorScript.IDText.text = id.ToString();
+        if(anchorScript.IDText!=null){
+            anchorScript.IDText.text = id.ToString();
+        }
+        
         anchorScript.SetOffsetManager(offsetManager);
 
         // Set the initial position and rotation from the RealSense space
