@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cdf5c5d4db5a3448023e2d2a0a2e5d, type: 3}
+  m_Name: Test
+  m_EditorClassIdentifier: 
+  poseName: Test
+  markerPositions:
+  - markerId: 1
+    position:
+      x: 0.062
+      y: 0.0040000007
+      z: -0.003000021
+  - markerId: 2
+    position:
+      x: 0.122999996
+      y: 0.005999999
+      z: -0.004999995
+  - markerId: 3
+    position:
+      x: -0.0020000003
+      y: 0.037
+      z: 0
+  - markerId: 4
+    position:
+      x: 0.06
+      y: 0.039
+      z: -0.004000008
+  - markerId: 5
+    position:
+      x: 0.121999994
+      y: 0.042
+      z: -0.0069999993

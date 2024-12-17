@@ -4,12 +4,19 @@ using System.Net.Sockets;
 using System.Text;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;  // Add this line
 
 public class ArUcoServer : MonoBehaviour
 {
     private UdpClient server;
     private const int PORT = 12345;
     private bool isRunning = true;
+
+    // test connetion
+    private bool isClientConnected = false;
+    private float lastMessageTime = 0f;
+    private const float CONNECTION_TIMEOUT = 2f;
+    private int messagesReceived = 0;
 
     // Dictionary to store marker data
     private Dictionary<int, TrackedMarker> trackedMarkers = new Dictionary<int, TrackedMarker>();
@@ -41,8 +48,23 @@ public class ArUcoServer : MonoBehaviour
         }
     }
 
+    
     [System.Serializable]
-    private class Position
+    public class MessageData
+    {
+        public double timestamp;
+        public Dictionary<string, MarkerData> markers;
+    }
+
+    [System.Serializable]
+    public class MarkerData  // Change to public
+    {
+        public Position position;
+        public float rotation;
+    }
+
+    [System.Serializable]
+    public class Position    // Change to public
     {
         public float x;
         public float y;
@@ -54,38 +76,55 @@ public class ArUcoServer : MonoBehaviour
         }
     }
 
-    [System.Serializable]
-    private class MarkerData
-    {
-        public Position position;
-        public float rotation;
-    }
 
-    [System.Serializable]
-    private class MessageData
-    {
-        public double timestamp;
-        public Dictionary<string, MarkerData> markers;
-    }
 
     void Start()
     {
         InitializeServer();
     }
+     private void Update()
+    {
+        if (isClientConnected && Time.time - lastMessageTime > CONNECTION_TIMEOUT)
+        {
+            isClientConnected = false;
+            Debug.Log("Client disconnected (timeout)");
+        }
+    }
 
     // Public method to get marker data
     public bool TryGetMarkerData(int markerId, out Vector3 position, out float rotation)
-    {
+    {   
+        Debug.Log($"Trying to get data for marker {markerId}");
+        Debug.Log($"Currently tracking {trackedMarkers.Count} markers: {string.Join(", ", trackedMarkers.Keys)}");
+        
         if (trackedMarkers.TryGetValue(markerId, out TrackedMarker marker))
         {
             position = marker.position;
             rotation = marker.rotation;
+            Debug.Log($"Found marker {markerId}: pos={position}, rot={rotation}");
             return true;
         }
 
         position = Vector3.zero;
         rotation = 0f;
+        Debug.Log($"Marker {markerId} not found in tracked markers");
         return false;
+    }
+    // Add this method to ArUcoServer
+    public void PrintServerStatus()
+    {
+        Debug.Log($"=== Server Status ===");
+        Debug.Log($"Connected: {isClientConnected}");
+        Debug.Log($"Total messages received: {messagesReceived}");
+        Debug.Log($"Tracked markers count: {trackedMarkers.Count}");
+        
+        foreach (var marker in trackedMarkers)
+        {
+            Debug.Log($"Marker {marker.Key}:");
+            Debug.Log($"  Position: {marker.Value.position:F3}");
+            Debug.Log($"  Rotation: {marker.Value.rotation:F3}");
+            Debug.Log($"  Last update: {Time.time - marker.Value.lastUpdateTime:F1}s ago");
+        }
     }
 
     // Get all tracked markers
@@ -111,10 +150,11 @@ public class ArUcoServer : MonoBehaviour
     }
 
     private void ProcessMessage(string jsonString)
-    {
+    {   
+        //Debug.Log("Raw received JSON: " + jsonString);  // Print exact received JSON
         try
         {
-            MessageData message = JsonUtility.FromJson<MessageData>(jsonString);
+            MessageData message = JsonConvert.DeserializeObject<MessageData>(jsonString);
 
             // Clear current frame data for all markers
             foreach (var marker in trackedMarkers.Values)
@@ -122,8 +162,13 @@ public class ArUcoServer : MonoBehaviour
                 marker.currentFrameData.Clear();
             }
 
+            
+            Debug.Log($"Received message with {message.markers?.Count ?? 0} markers");
+
+
             if (message.markers != null)
-            {
+            {   
+                Debug.Log("Processing markers: " + string.Join(", ", message.markers.Keys));
                 foreach (var marker in message.markers)
                 {
                     int id = int.Parse(marker.Key);
@@ -140,11 +185,13 @@ public class ArUcoServer : MonoBehaviour
                 }
 
                 // Debug output
+                /*
                 foreach (var marker in trackedMarkers)
-                {
+                {   
+                    
                     Debug.Log($"Updated Marker {marker.Key}: Position: {marker.Value.position:F3}, " +
                             $"Rotation: {marker.Value.rotation:F3}");
-                }
+                }*/
             }
         }
         catch (Exception e)
@@ -163,11 +210,28 @@ public class ArUcoServer : MonoBehaviour
 
     async void BeginReceiving()
     {
+        Debug.Log("Server started listening on port " + PORT);
         while (isRunning)
         {
             try
             {
                 UdpReceiveResult result = await server.ReceiveAsync();
+                
+                // Add connection status logging
+                if (!isClientConnected)
+                {
+                    isClientConnected = true;
+                    Debug.Log($"Client connected from {result.RemoteEndPoint}");
+                }
+
+                lastMessageTime = Time.time;
+                messagesReceived++;
+                
+                if (messagesReceived % 100 == 0)
+                {
+                    Debug.Log($"Connection active. Total messages: {messagesReceived}");
+                }
+
                 string jsonString = Encoding.UTF8.GetString(result.Buffer);
                 ProcessMessage(jsonString);
 
