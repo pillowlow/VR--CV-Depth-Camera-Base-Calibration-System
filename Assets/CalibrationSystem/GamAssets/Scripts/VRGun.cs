@@ -1,5 +1,7 @@
 using UnityEngine;
 using TMPro;
+using static OVRInput;
+
 
 public class VRGun : MonoBehaviour
 {
@@ -11,6 +13,8 @@ public class VRGun : MonoBehaviour
     public int maxBullets = 10;  // Max bullets in the gun
     public int currentBullets;   // Current bullets left in the gun
     public TextMeshProUGUI bulletCountText;  // Text component to display bullet count
+    [SerializeField] private Controller controller;
+    
 
     private AudioSource audioSource;
     private bool isGrabbed = false;
@@ -23,15 +27,16 @@ public class VRGun : MonoBehaviour
     }
 
     private void Update()
-    {
-        if (isGrabbed && Input.GetButtonDown("Fire1"))
+    {   
+         if(OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller) || OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, controller))
         {
             Shoot();
         }
     }
 
     public void GrabGun()
-    {
+    {   
+
         isGrabbed = true;
     }
 
