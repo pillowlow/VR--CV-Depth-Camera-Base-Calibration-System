@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53cdf5c5d4db5a3448023e2d2a0a2e5d, type: 3}
+  m_Name: Vert
+  m_EditorClassIdentifier: 
+  poseName: Vert
+  markerPositions:
+  - markerId: 1
+    position:
+      x: -0.001000002
+      y: 0.060999997
+      z: -0.0069999993
+  - markerId: 2
+    position:
+      x: -0.001000002
+      y: 0.122999996
+      z: -0.010999978
+  - markerId: 3
+    position:
+      x: -0.036000002
+      y: -0.002000004
+      z: 0.0010000169
+  - markerId: 4
+    position:
+      x: -0.037
+      y: 0.060999997
+      z: -0.0029999912
+  - markerId: 5
+    position:
+      x: -0.037
+      y: 0.122
+      z: -0.00999999

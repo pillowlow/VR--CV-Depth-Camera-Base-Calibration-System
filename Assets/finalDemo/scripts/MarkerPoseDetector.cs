@@ -6,6 +6,7 @@ using System.Collections;
 using static OVRInput;
 using System.Linq;  // Add this for ToDictionary
 using System;  // Add this for Exception
+using UnityEngine.Events;
 
 public class MarkerPoseDetector : MonoBehaviour
 {
@@ -25,6 +26,9 @@ public class MarkerPoseDetector : MonoBehaviour
 
     [Header("Pose References")]
     [SerializeField] private List<WeaponPoseData> weaponPoses = new List<WeaponPoseData>();
+    [Header("Event when hover")]
+    public UnityEvent OnHoverStart;
+    public UnityEvent OnHoverEnd;
 
 
     private string currentPoseName = "";
@@ -38,12 +42,21 @@ public class MarkerPoseDetector : MonoBehaviour
         {
             StartCoroutine(CheckPoseRoutine());
         }
-        if(OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller) || OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, controller) || Input.GetKeyDown(KeyCode.Space))
+        if(Input.GetKeyDown(KeyCode.Space))
         {
             SaveCurrentPoseAsAsset(RecordingPoseName);
         }
+        if(OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller) || OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, controller) ){
+            StartHover();
+        }
     }
-
+    private void StartHover(){
+        OnHoverStart?.Invoke();
+    }
+    private void EndHover(){
+        OnHoverEnd?.Invoke();
+        
+    }
     private IEnumerator CheckPoseRoutine()
     {
         isChecking = true;
@@ -64,6 +77,8 @@ public class MarkerPoseDetector : MonoBehaviour
                     {   
                         SetCurrentPose(matchedPose.poseName);
                         checkPose = false;
+                        Debug.Log("Switch to: "+ matchedPose.poseName + "complete, turn off checkHover");
+                        EndHover();
                         break;
                     }
                 }
@@ -71,6 +86,7 @@ public class MarkerPoseDetector : MonoBehaviour
                 {
                     consistentChecksCount = 1;
                     Debug.Log("The step of "+ matchedPose.poseName + " is " + consistentChecksCount);
+                    StartHover();
                     lastMatchedPose = matchedPose;
                 }
             }
