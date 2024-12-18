@@ -17,7 +17,9 @@ public class MarkerPoseDetector : MonoBehaviour
     [SerializeField] private float positionTolerance = 0.05f;
     [SerializeField] private float checkInterval = 0.5f;
     [SerializeField] private int requiredConsistentChecks = 4;
-    [SerializeField] private bool checkPose = false;
+    [SerializeField]  private bool checkPose = false;
+     [SerializeField] private string stateToCheck = null;  // The specific weapon pose we're looking for
+      [SerializeField] private float maxCheckDuration = 10f;  // Maximum time to try detecting
 
     [Header("Weapon Poses")]
     //[SerializeField] private List<WeaponPose> weaponPoses = new List<WeaponPose>();
@@ -35,6 +37,7 @@ public class MarkerPoseDetector : MonoBehaviour
     private int consistentChecksCount = 0;
     private WeaponPoseData lastMatchedPose = null;
     private bool isChecking = false;
+    private float checkStartTime;
 
     private void Update()
     {
@@ -46,9 +49,17 @@ public class MarkerPoseDetector : MonoBehaviour
         {
             SaveCurrentPoseAsAsset(RecordingPoseName);
         }
+
+        /*
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            StartCheckingPose("Shield");
+        }*/
+        /*
         if(OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger, controller) || OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger, controller) ){
             StartHover();
-        }
+        }*/
+
     }
     private void StartHover(){
         OnHoverStart?.Invoke();
@@ -57,74 +68,104 @@ public class MarkerPoseDetector : MonoBehaviour
         OnHoverEnd?.Invoke();
         
     }
-    private IEnumerator CheckPoseRoutine()
+    public bool StartCheckingPose(string weaponName)
     {
-        isChecking = true;
+        if (checkPose)
+        {
+            Debug.Log($"Already checking pose: {stateToCheck}");
+            return false;
+        }
+
+        stateToCheck = weaponName;
+        checkPose = true;
         consistentChecksCount = 0;
         lastMatchedPose = null;
+        checkStartTime = Time.time;
+        StartHover();
+        StartCoroutine(CheckPoseRoutine());
+        Debug.Log($"Started checking for weapon pose: {weaponName}");
+        return true;
+    }
 
+    private IEnumerator CheckPoseRoutine()
+    {
+        float lastCheckTime = 0;
+        
         while (checkPose)
         {
-            WeaponPoseData matchedPose = CheckCurrentPose();
-            
-            if (matchedPose != null)
+            if (Time.time - checkStartTime > maxCheckDuration)
             {
-                if (matchedPose == lastMatchedPose)
-                {
+                Debug.Log("Pose check timed out");
+                EndChecking(false);
+                yield break;
+            }
+
+            if (Time.time - lastCheckTime >= checkInterval)
+            {
+                bool poseMatched = CheckCurrentPose();
+                
+                if (poseMatched)
+                {   
                     consistentChecksCount++;
-                    Debug.Log("The step of "+ matchedPose.poseName + " is " + consistentChecksCount);
+                    float progress = (float)consistentChecksCount / requiredConsistentChecks;
+                    Debug.Log($"Pose: {stateToCheck} check progress {progress:F2}");
+
                     if (consistentChecksCount >= requiredConsistentChecks)
-                    {   
-                        SetCurrentPose(matchedPose.poseName);
-                        checkPose = false;
-                        Debug.Log("Switch to: "+ matchedPose.poseName + "complete, turn off checkHover");
-                        EndHover();
-                        break;
+                    {
+                        Debug.Log("Pose check successful");
+                        EndChecking(true);
+                        yield break;
                     }
                 }
                 else
                 {
-                    consistentChecksCount = 1;
-                    Debug.Log("The step of "+ matchedPose.poseName + " is " + consistentChecksCount);
-                    StartHover();
-                    lastMatchedPose = matchedPose;
+                    if (consistentChecksCount > 0)
+                    {
+                        Debug.Log($"Pose check interrupted at {GetDetectionProgress():F2}");
+                    }
+                    consistentChecksCount = 0;
                 }
-            }
-            else
-            {
-                consistentChecksCount = 0;
-                lastMatchedPose = null;
+                
+                lastCheckTime = Time.time;
             }
 
-            yield return new WaitForSeconds(checkInterval);
+            yield return new WaitForSeconds(checkInterval); // Small wait for performance
         }
-
-        isChecking = false;
     }
 
-     private WeaponPoseData CheckCurrentPose()
+    private bool CheckCurrentPose()
     {
+        if (string.IsNullOrEmpty(stateToCheck))
+            return false;
+
+        WeaponPoseData targetPose = weaponPoses.Find(p => p.poseName == stateToCheck);
+        if (targetPose == null)
+        {
+            Debug.LogWarning($"No pose data found for weapon: {stateToCheck}");
+            return false;
+        }
+
         var currentPositions = calibrationCalculator.GetAllRelativePositions();
         
-        foreach (var pose in weaponPoses)
+        foreach (var markerPos in targetPose.markerPositions)
         {
-            bool poseMatches = true;
-            
-            foreach (var markerPos in pose.markerPositions)
+            if (!currentPositions.TryGetValue(markerPos.markerId, out var currentPos) || 
+                Vector3.Distance(currentPos.position, markerPos.GetPosition()) > positionTolerance)
             {
-                if (!currentPositions.TryGetValue(markerPos.markerId, out var currentPos) || 
-                    Vector3.Distance(currentPos.position, markerPos.GetPosition()) > positionTolerance)
-                {
-                    poseMatches = false;
-                    break;
-                }
+                return false;
             }
-            
-            if (poseMatches)
-                return pose;
         }
-        
-        return null;
+
+        return true;
+    }
+
+    private void EndChecking(bool success)
+    {
+        checkPose = false;
+        stateToCheck = null;
+        Debug.Log("Pose check end");
+        EndHover();
+        StopAllCoroutines();
     }
 
       public void SaveCurrentPoseAsAsset(string poseName)
@@ -189,9 +230,9 @@ public class MarkerPoseDetector : MonoBehaviour
         return currentPoseName;
     }
 
-    public float GetDetectionProgress()
+     public float GetDetectionProgress()
     {
-        if (!isChecking || lastMatchedPose == null)
+        if (!checkPose || consistentChecksCount == 0)
             return 0f;
         
         return (float)consistentChecksCount / requiredConsistentChecks;
@@ -199,7 +240,12 @@ public class MarkerPoseDetector : MonoBehaviour
 
     public bool IsChecking()
     {
-        return isChecking;
+        return checkPose;
+    }
+
+    public string GetCurrentlyChecking()
+    {
+        return stateToCheck;
     }
 }
 

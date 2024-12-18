@@ -16,22 +16,17 @@ public class MorphWeaponManager : MonoBehaviour
 
     private void Start()
     {
-        // Find all weapons in scene
         allWeapons = new List<MorphWeapon>(FindObjectsOfType<MorphWeapon>());
-        
-        // Initialize with default weapon
         SetInitialWeapon();
     }
 
     private void SetInitialWeapon()
     {
-        // Mute all weapons first
         foreach (var weapon in allWeapons)
         {
             weapon.SwitchState(WeaponState.Mute);
         }
 
-        // Set default weapon to instance state
         MorphWeapon defaultWeapon = allWeapons.Find(w => w.name == defaultWeaponName);
         if (defaultWeapon != null)
         {
@@ -43,34 +38,60 @@ public class MorphWeaponManager : MonoBehaviour
             Debug.LogError($"Default weapon '{defaultWeaponName}' not found!");
         }
 
-        // Hide progress text initially
         if (progressText != null)
         {
             progressText.gameObject.SetActive(false);
         }
     }
 
-    // Called by MarkerPoseDetector when hover starts
-    public void TellHoverStart()
+    // Public method for external classes to initiate hover
+    public bool StartWeaponHover(string weaponName)
     {
-        string detectedPoseName = poseDetector.GetCurrentPose();
-        targetWeapon = allWeapons.Find(w => w.name == detectedPoseName);
+        targetWeapon = allWeapons.Find(w => w.name == weaponName);
 
         if (targetWeapon != null && targetWeapon != currentWeapon)
         {
-            // Show progress text
-            if (progressText != null)
+            bool started = poseDetector.StartCheckingPose(weaponName);
+            if (started)
             {
-                progressText.gameObject.SetActive(true);
+                HandleHoverStart();
+                return true;
             }
-
-            // Set states
-            currentWeapon.SwitchState(WeaponState.OnSwitch);
-            targetWeapon.SwitchState(WeaponState.OnHover);
-
-            // Start progress update
-            StartCoroutine(UpdateHoverProgress());
         }
+        
+        return false;
+    }
+
+    // Private method to handle hover state changes
+    private void HandleHoverStart()
+    {
+        if (progressText != null)
+        {
+            progressText.gameObject.SetActive(true);
+        }
+
+        currentWeapon.SwitchState(WeaponState.OnSwitch);
+        targetWeapon.SwitchState(WeaponState.OnHover);
+        StartCoroutine(UpdateHoverProgress());
+    }
+
+    // Called by MarkerPoseDetector when hover check completes
+    public void ReceiveHoverEnd()
+    {
+        if (progressText != null)
+        {
+            progressText.gameObject.SetActive(false);
+        }
+
+        if (targetWeapon != null)
+        {
+            currentWeapon.SwitchState(WeaponState.Mute);
+            targetWeapon.SwitchState(WeaponState.Instance);
+            currentWeapon = targetWeapon;
+            targetWeapon = null;
+        }
+
+        StopAllCoroutines();
     }
 
     private System.Collections.IEnumerator UpdateHoverProgress()
@@ -86,37 +107,6 @@ public class MorphWeaponManager : MonoBehaviour
         }
     }
 
-    // Called by MarkerPoseDetector when hover ends
-    public void TellHoverEnd()
-    {
-        if (progressText != null)
-        {
-            progressText.gameObject.SetActive(false);
-        }
-
-        if (targetWeapon != null)
-        {
-            // Complete the transition
-            currentWeapon.SwitchState(WeaponState.Mute);
-            targetWeapon.SwitchState(WeaponState.Instance);
-
-            // Update current weapon reference
-            currentWeapon = targetWeapon;
-            targetWeapon = null;
-        }
-
-        StopAllCoroutines(); // Stop progress update
-    }
-
-    // Helper method to get current weapon
-    public MorphWeapon GetCurrentWeapon()
-    {
-        return currentWeapon;
-    }
-
-    // Helper method to get target weapon (if in transition)
-    public MorphWeapon GetTargetWeapon()
-    {
-        return targetWeapon;
-    }
+    public MorphWeapon GetCurrentWeapon() => currentWeapon;
+    public MorphWeapon GetTargetWeapon() => targetWeapon;
 }
